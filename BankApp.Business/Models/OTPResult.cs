@@ -1,6 +1,6 @@
 ﻿namespace BankApp.Business.Models 
 {
-    internal class OTPResult
+    public class OTPResult
     {
         public string OTPPassword { get; set; }
         public DateTime ValidFrom { get; set; }

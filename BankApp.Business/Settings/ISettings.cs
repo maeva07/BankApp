@@ -1,6 +1,6 @@
 ﻿namespace BankApp.Business.Settings
 {
-    internal interface ISettings
+    public interface ISettings
     {
         int TimeStep { get; }
         int Tolerance { get; }

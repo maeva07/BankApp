@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 
 namespace BankApp.Business.Services
 {
-    internal class OTPService : IOTPService
+    public class OTPService : IOTPService
     {
         private const byte MaxOffsetLength = 0xf;
 
@@ -24,11 +24,10 @@ namespace BankApp.Business.Services
             IConverter<long, byte[]> hotpToByteConverter,
             ISecretGeneratorProvider secretGeneratorProvider)
         {
-            
             this._settings = settings ?? throw new ArgumentNullException(nameof(settings));
             this._digitModulo = Convert.ToInt64(Math.Pow(10, settings.DigitLength));
-            this._hotpToByteConverter = hotpToByteConverter ?? throw new ArgumentNullException(nameof(settings));
-            this._secretGeneratorProvider = secretGeneratorProvider ?? throw new ArgumentNullException(nameof(settings));
+            this._hotpToByteConverter = hotpToByteConverter ?? throw new ArgumentNullException(nameof(_hotpToByteConverter));
+            this._secretGeneratorProvider = secretGeneratorProvider ?? throw new ArgumentNullException(nameof(_secretGeneratorProvider));
         }
 
         /// <summary>
@@ -38,8 +37,9 @@ namespace BankApp.Business.Services
         /// <returns></returns>
         public OTPResult GenerateOTP(string userId, DateTime? utcDateTime = null)
         {
-            //Guard.ArgumentStringNotNullOrEmpty(userId, nameof(userId));
-            if (userId == null) { throw new ArgumentNullException(nameof(userId)); }
+          //  Guard.ArgumentStringNotNullOrEmpty(userId, nameof(userId));
+
+            if( userId == null ) { throw new ArgumentNullException(nameof(userId)); }
 
             var dateTime = utcDateTime ?? DateTime.UtcNow;
             var secret = this._secretGeneratorProvider.GenerateSecret(userId);

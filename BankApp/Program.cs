@@ -1,28 +1,24 @@
-﻿using BankApp;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 
-try
+namespace BankApp
 {
-    Bootstrapper bootstrapper = new Bootstrapper();
-    bootstrapper.Run();
-}
-catch (Exception ex)
-{
-    DisplayError(ex);
-    Pause();
-}
+    public class Program 
+    {
+        public static IServiceCollection InitializeEngine(IServiceCollection serviceCollection)
+        {
+            var bootstrapper = new Bootstrapper(serviceCollection);
 
-static void DisplayError(Exception ex)
-{
-    ConsoleColor oldColor = Console.ForegroundColor;
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine(ex);
-    Console.ForegroundColor = oldColor;
-}
+            var updatedServiceCollection = bootstrapper.Initialize();
 
-static void Pause()
-{
-    Console.WriteLine();
-    Console.Write("Press any key to continue...");
-    Console.ReadKey(true);
-    Console.WriteLine();
+            return updatedServiceCollection;
+        }
+
+        static async Task Main()
+        {
+             
+        }
+    }
+
 }

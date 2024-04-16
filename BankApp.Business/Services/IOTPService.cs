@@ -2,7 +2,7 @@
 
 namespace BankApp.Business.Services
 {
-    internal interface IOTPService
+    public interface IOTPService
     {
         OTPResult GenerateOTP(string userId, DateTime? utcDateTime = null);
 

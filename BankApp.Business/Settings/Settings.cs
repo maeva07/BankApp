@@ -1,6 +1,6 @@
 ﻿namespace BankApp.Business.Settings
 {
-    internal class Settings : ISettings
+    public class Settings : ISettings
     {
         public Settings(int timeStep, int tolerance, int digitLength)
         {

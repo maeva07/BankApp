@@ -1,10 +1,24 @@
-﻿namespace BankApp
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace BankApp
 {
     internal class Bootstrapper
     {
-        internal void Run()
+        private readonly IServiceCollection _serviceCollection;
+
+        public Bootstrapper(IServiceCollection serviceCollection)
         {
-            Console.WriteLine("it works");
+            this._serviceCollection = serviceCollection ?? new ServiceCollection();
+        }
+
+        public IServiceCollection Initialize()
+        {
+            this._serviceCollection
+                .AddEngineConverters()
+                .AddProviders()
+                .AddServices();
+
+            return this._serviceCollection;
         }
     }
 }
