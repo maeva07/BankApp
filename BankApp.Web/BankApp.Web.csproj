@@ -18,7 +18,4 @@
     <ProjectReference Include="..\BankApp\BankApp.csproj" />
   </ItemGroup>
 
-
-
-
 </Project>
