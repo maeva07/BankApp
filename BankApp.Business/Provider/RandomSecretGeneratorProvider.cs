@@ -6,16 +6,11 @@ namespace BankApp.Business.Provider
     {
         private readonly int _keyLength;
 
-        protected RandomSecretGeneratorProvider(int keyLength)
+        public RandomSecretGeneratorProvider(int keyLength)
         {
             this._keyLength = keyLength;
         }
 
-        /// <summary>
-        /// Generates a random string key based on a length
-        /// </summary>
-        /// <param name="length">input length of the resulting key</param>
-        /// <returns>The generated string</returns>
         protected virtual string GenerateRandomKey(int length)
         {
             var rngCryptoServiceProvider = new RNGCryptoServiceProvider();

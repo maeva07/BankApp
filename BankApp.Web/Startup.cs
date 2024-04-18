@@ -1,37 +1,32 @@
 ﻿using BankApp.Web.DependencyInjection;
+using Microsoft.AspNetCore.SpaServices.AngularCli;
 
 namespace BankApp.Web
 {
     public class Startup
-    {
-        public Startup(IConfiguration configuration)
-        {
-            this.Configuration = configuration;
-        }
-
+    {  
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
-            // initialize web converters
-
             services.AddSettings(Configuration)
                     .AddViewModelBuilders();
 
-            // initialize engine
             ModuleInitialization.InitializeEngine(services);
 
             services.AddControllersWithViews();
 
-            // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
                 configuration.RootPath = "ClientApp/build";
             });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -41,7 +36,6 @@ namespace BankApp.Web
             else
             {
                 app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
             
@@ -62,7 +56,7 @@ namespace BankApp.Web
             {
                 spa.Options.SourcePath = "ClientApp";
 
-               // if (env.IsDevelopment()) spa.UseReactDevelopmentServer("start");
+                if (env.IsDevelopment()) spa.UseAngularCliServer(npmScript: "start");
             });
         }
     }

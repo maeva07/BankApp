@@ -9,48 +9,35 @@ namespace BankApp.Business.Services
     public class OTPService : IOTPService
     {
         private const byte MaxOffsetLength = 0xf;
+        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0);
+        private readonly long digitModulo;
 
-        private static readonly DateTime UnixEpoch =
-            new DateTime(1970, 1, 1, 0, 0, 0);
+        private readonly IConverter<long, byte[]> hotpToByteConverter;
+        private readonly ISecretGeneratorProvider secretGeneratorProvider;
+        private readonly ISettings settings;
 
-        private readonly long _digitModulo;
-        private readonly IConverter<long, byte[]> _hotpToByteConverter;
-        private readonly ISecretGeneratorProvider _secretGeneratorProvider;
-
-        private readonly ISettings _settings;
-
-        public OTPService(
-            ISettings settings,
-            IConverter<long, byte[]> hotpToByteConverter,
-            ISecretGeneratorProvider secretGeneratorProvider)
+        public OTPService( ISettings settings, IConverter<long, byte[]> hotpToByteConverter, ISecretGeneratorProvider secretGeneratorProvider)
         {
-            this._settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            this._digitModulo = Convert.ToInt64(Math.Pow(10, settings.DigitLength));
-            this._hotpToByteConverter = hotpToByteConverter ?? throw new ArgumentNullException(nameof(_hotpToByteConverter));
-            this._secretGeneratorProvider = secretGeneratorProvider ?? throw new ArgumentNullException(nameof(_secretGeneratorProvider));
+            digitModulo = Convert.ToInt64(Math.Pow(10, settings.DigitLength));
+            this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            this.hotpToByteConverter = hotpToByteConverter ?? throw new ArgumentNullException(nameof(OTPService.hotpToByteConverter));
+            this.secretGeneratorProvider = secretGeneratorProvider ?? throw new ArgumentNullException(nameof(OTPService.secretGeneratorProvider));
         }
 
-        /// <summary>
-        ///     Conveys of the specifications of https://tools.ietf.org/html/rfc4226#section-5.3
-        ///     and https://tools.ietf.org/id/draft-mraihi-totp-timebased-06.html#Section-Time-based-Variant
-        /// </summary>
-        /// <returns></returns>
         public OTPResult GenerateOTP(string userId, DateTime? utcDateTime = null)
         {
-          //  Guard.ArgumentStringNotNullOrEmpty(userId, nameof(userId));
-
             if( userId == null ) { throw new ArgumentNullException(nameof(userId)); }
 
             var dateTime = utcDateTime ?? DateTime.UtcNow;
-            var secret = this._secretGeneratorProvider.GenerateSecret(userId);
+            var secret = this.secretGeneratorProvider.GenerateSecret(userId);
             var hotpValue = this.ComputeHOTPValue(dateTime);
-            var hotpBytes = this._hotpToByteConverter.Convert(hotpValue);
+            var hotpBytes = this.hotpToByteConverter.Convert(hotpValue);
             var hashBytes = GenerateHMACSHA1Hash(hotpBytes, secret);
             var binaryCode = GenerateBinaryCode(hashBytes);
 
-            var otp = binaryCode % this._digitModulo;
+            var otp = binaryCode % this.digitModulo;
 
-            var otpString = otp.ToString().PadLeft(this._settings.DigitLength, '0');
+            var otpString = otp.ToString().PadLeft(this.settings.DigitLength, '0');
             var otpResult = this.ComputeOTPResult(otpString, dateTime);
 
             return otpResult;
@@ -60,9 +47,9 @@ namespace BankApp.Business.Services
         {
             var utcNow = DateTime.UtcNow;
 
-            for (var i = 0; i < this._settings.Tolerance; i++)
+            for (var i = 0; i < this.settings.Tolerance; i++)
             {
-                var date = utcNow.AddSeconds(-(this._settings.TimeStep * i));
+                var date = utcNow.AddSeconds(-(this.settings.TimeStep * i));
                 var generatedOtp = this.GenerateOTP(userId, date);
                 if (generatedOtp.OTPPassword == otp) return true;
             }
@@ -70,13 +57,6 @@ namespace BankApp.Business.Services
             return false;
         }
 
-        // ReSharper disable once InconsistentNaming
-        // ReSharper disable once IdentifierTypo
-        /// <summary>
-        ///     Generating a HMACSHA1 value
-        ///     for more information: https://tools.ietf.org/html/rfc4226#section-5.3
-        ///     the inner contains an implementation of the https://tools.ietf.org/html/rfc4226#section-5.4
-        /// </summary>
         private static byte[] GenerateHMACSHA1Hash(byte[] hotpBytes, string secret)
         {
             var secretBytes = Convert.FromBase64String(secret);
@@ -87,33 +67,6 @@ namespace BankApp.Business.Services
             return hash;
         }
 
-        /// <summary>
-        ///     Generates the offset for the hash
-        ///     Part of the https://tools.ietf.org/html/rfc4226#section-5.3
-        /// </summary>
-        /// <param name="hash">input hash bytes</param>
-        /// <returns>the byte offset</returns>
-        private static int GenerateHMACOffset(IEnumerable<byte> hash)
-        {
-            var offset = hash.Last();
-            offset &= MaxOffsetLength;
-
-            return offset;
-        }
-
-        /// <summary>
-        ///     The method that generates the actual OTP based on the given hash
-        ///     Taken from https://tools.ietf.org/html/rfc4226#section-5.3
-        ///     DT(String) // String = String[0]...String[19]
-        ///     Let OffsetBits be the low-order 4 bits of String[19]
-        ///     Offset = StToNum(OffsetBits) // 0 &lt;= OffSet &lt;= 15
-        ///     Let P = String[OffSet]...String[OffSet+3]
-        ///     Return the Last 31 bits of P
-        ///     Implemented based on the https://tools.ietf.org/html/rfc4226#section-5.4 suggestions
-        /// </summary>
-        /// <param name="hashBytes">the input hash bytes</param>
-        /// <returns>the generated binary code</returns>
-        // ReSharper disable once InconsistentNaming
         private static int GenerateBinaryCode(IReadOnlyList<byte> hashBytes)
         {
             var offset = GenerateHMACOffset(hashBytes);
@@ -125,26 +78,19 @@ namespace BankApp.Business.Services
                 | (hashBytes[offset + 3] & 0xff);
 
             return binaryCode;
+        }   
+        
+        private static int GenerateHMACOffset(IEnumerable<byte> hash)
+        {
+            var offset = hash.Last();
+            offset &= MaxOffsetLength;
+
+            return offset;
         }
 
-
-        /// <summary>
-        ///     See more at https://tools.ietf.org/id/draft-mraihi-totp-timebased-06.html#anchor3
-        ///     Basically, we define TOTP as TOTP = HOTP(K, T) where T is an integer and represents the number
-        ///     of time steps between the initial counter time T0 and the current Unix time (i.e. the number of seconds
-        ///     elapsed since midnight UTC of January 1, 1970).
-        ///     More specifically T = (Current Unix time - T0) / X where:
-        ///     - X represents the time step in seconds (default value X = 30 seconds) and is a system parameter;
-        ///     - T0 is the Unix time to start counting time steps (default value is 0, Unix epoch) and is also a system parameter;
-        ///     - The default floor function is used in the computation. For example, with T0 = 0 and time step X = 30, T = 1
-        ///     if the current Unix time is 59 seconds and T = 2 if the current Unix time is 60 seconds.
-        /// </summary>
-        /// <param name="utcDateTime">the input utc time</param>
-        /// <returns>TOTP value</returns>
-        // ReSharper disable once InconsistentNaming
         private long ComputeHOTPValue(DateTime utcDateTime)
         {
-            var totpValue = (utcDateTime - UnixEpoch).TotalSeconds / this._settings.TimeStep;
+            var totpValue = (utcDateTime - UnixEpoch).TotalSeconds / this.settings.TimeStep;
             var totpLongValue = Convert.ToInt64(totpValue);
 
             return totpLongValue;
@@ -168,14 +114,14 @@ namespace BankApp.Business.Services
                 dateTime = dateTime.AddSeconds(-second - 15);
             }
 
-            var validUntil = dateTime.AddSeconds(this._settings.TimeStep);
+            var validUntil = dateTime.AddSeconds(this.settings.TimeStep);
             var secondsLeft = (int)(validUntil - utcDateTime).TotalSeconds;
 
             var otpResult = new OTPResult
             {
                 OTPPassword = otpString,
                 ValidFrom = dateTime,
-                ValidUntil = dateTime.AddSeconds(this._settings.TimeStep),
+                ValidUntil = dateTime.AddSeconds(this.settings.TimeStep),
                 ValidSecondsLeft = secondsLeft
             };
 

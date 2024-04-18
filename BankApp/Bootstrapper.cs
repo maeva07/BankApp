@@ -4,21 +4,21 @@ namespace BankApp
 {
     internal class Bootstrapper
     {
-        private readonly IServiceCollection _serviceCollection;
+        private readonly IServiceCollection serviceCollection;
 
         public Bootstrapper(IServiceCollection serviceCollection)
         {
-            this._serviceCollection = serviceCollection ?? new ServiceCollection();
+            this.serviceCollection = serviceCollection ?? throw new ArgumentNullException(nameof(serviceCollection));
         }
 
         public IServiceCollection Initialize()
         {
-            this._serviceCollection
+            this.serviceCollection
                 .AddEngineConverters()
                 .AddProviders()
                 .AddServices();
 
-            return this._serviceCollection;
+            return this.serviceCollection;
         }
     }
 }

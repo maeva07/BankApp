@@ -5,9 +5,7 @@ namespace BankApp.Web.DependencyInjection
 {
     internal static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddSettings(
-            this IServiceCollection serviceCollection,
-            IConfiguration configuration)
+        public static IServiceCollection AddSettings( this IServiceCollection serviceCollection, IConfiguration configuration)
         {
             var settings = new ConfigurationToSettingsConverter().Convert(configuration);
             serviceCollection.AddSingleton(settings);
@@ -15,8 +13,7 @@ namespace BankApp.Web.DependencyInjection
             return serviceCollection;
         }
 
-        public static IServiceCollection AddViewModelBuilders(
-            this IServiceCollection serviceCollection)
+        public static IServiceCollection AddViewModelBuilders(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddTransient<OTPResultModelBuilderView>();
 

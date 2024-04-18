@@ -1,16 +1,18 @@
-﻿using BankApp.Business.Settings;
+﻿using BankApp.Business.Converters;
+using BankApp.Business.Settings;
 
 namespace BankApp.Web.Converters
 {
-    public class ConfigurationToSettingsConverter
+    public class ConfigurationToSettingsConverter : IConverter<IConfiguration, ISettings>
     {
         private const string Section = "OTPSettings";
 
         public ISettings Convert(IConfiguration input)
         {
-            var timeStep = int.Parse(this.GetFromConfiguration(input, "TimeStep"));
-            var tolerance = int.Parse(this.GetFromConfiguration(input, "Tolerance"));
-            var digitLength = int.Parse(this.GetFromConfiguration(input, "DigitLength"));
+
+            var timeStep = int.Parse(GetFromConfiguration(input, "TimeStep"));
+            var tolerance = int.Parse(GetFromConfiguration(input, "Tolerance"));
+            var digitLength = int.Parse(GetFromConfiguration(input, "DigitLength"));
 
             var settings = new Settings(timeStep, tolerance, digitLength);
 

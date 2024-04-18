@@ -12,11 +12,5 @@ namespace BankApp
 
             return updatedServiceCollection;
         }
-
-        static async Task Main()
-        {
-             
-        }
     }
-
 }
